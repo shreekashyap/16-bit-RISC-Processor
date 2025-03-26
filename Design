@@ -1,0 +1,135 @@
+timescale 1ns / 1ps
+module inst_dec(
+      input [15:0] I_inst,
+input I_clk,
+input I_en,
+output reg O_aluop,
+      output reg [3:0] O_selA,
+      output reg [3:0] O_selB,
+output reg [3:0] O_selD,
+output reg [15:0] imm
+output reg O_regwe
+);
+	initial begin
+		O_aulop <=0;
+		O_selA <=0;
+		O_selB <=0;
+		O_selD <=0;
+		O_imm <=0;
+		O_regwe <=0;
+	end
+always@(negedge I_clk)begin
+	if (I_en) begin
+		O_aulop <= I_inst[15:11];
+		O_selA <= I_inst[10:8];
+		O_selB <= I_inst[7:5];
+		O_selD <= I_inst[4:2];
+		O_imm <= I_inst[7:0];
+		
+Case ( I_inst [15:12])
+	            4'b0111 : O_regwe <=0;
+		4'b1100 : O_regwe <=0;
+4'b1101 : O_regwe <=0;
+default : O_regwe <=0;
+	endcase
+end 
+end 
+endmodule
+
+module control_unit(
+    input [3:0] opcode,
+    output reg alu_op,
+    output reg reg_write,
+    output reg mem_read,
+    output reg mem_write
+);
+    always @(*) begin
+        case (opcode)
+            4'b0000: begin // ADD
+                alu_op = 1;
+                reg_write = 1;
+                mem_read = 0;
+                mem_write = 0;
+            end
+            4'b0001: begin // SUB
+                alu_op = 1;
+                reg_write = 1;
+                mem_read = 0;
+                mem_write = 0;
+            end
+            // Add additional opcodes here
+            default: begin
+                alu_op = 0;
+                reg_write = 0;
+                mem_read = 0;
+                mem_write = 0;
+            end
+        endcase
+    end
+endmodule
+module alu(
+    input [15:0] A,
+    input [15:0] B,
+    input alu_op,
+    output reg [15:0] result
+);
+    always @(*) begin
+        if (alu_op) begin
+            result = A + B; // Example for addition
+        end else begin
+            result = A - B; // Example for subtraction
+        end
+    end
+endmodule
+
+module register_handler(
+    input clk,
+    input reg_write,
+    input [3:0] reg_addr,
+    input [15:0] reg_data,
+    output reg [15:0] reg_out
+);
+    reg [15:0] registers [0:15]; // 16 registers
+
+    always @(posedge clk) begin
+        if (reg_write) begin
+            registers[reg_addr] <= reg_data; // Write data to register
+        end
+    end
+
+    always @(*) begin
+        reg_out = registers[reg_addr]; // Read data from register
+    end
+endmodule
+
+module program_counter(
+    input clk,
+    input reset,
+    output reg [15:0] pc
+);
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            pc <= 0; // Reset PC to 0
+        end else begin
+            pc <= pc + 1; // Increment PC
+        end
+    end
+endmodule
+
+module ram(
+    input clk,
+    input mem_read,
+    input mem_write,
+    input [15:0] address,
+    inout [15:0] data
+);
+    reg [15:0] memory [0:255]; // 256 x 16-bit memory
+
+    always @(posedge clk) begin
+        if (mem_write) begin
+            memory[address] <= data; // Write to memory
+        end
+end
+
+    assign data = (mem_read) ? memory[address] : 16'bz; // Read from memory
+endmodule
