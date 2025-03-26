@@ -1,0 +1,129 @@
+   module tb_instruction_decoder;
+    reg [15:0] instruction;
+    wire [3:0] opcode;
+    wire [11:0] operand;
+
+    instruction_decoder id(
+        .instruction(instruction),
+        .opcode(opcode),
+        .operand(operand)
+    );
+
+    initial begin
+        instruction = 16'b0000000000000000; // Test case 1
+        #10;
+        instruction = 16'b0001000000000000; // Test case 2
+        #10;
+        instruction = 16'b0001000000000001; // Test case 3
+        #10;
+        $finish;
+    end
+endmodule
+
+module tb_control_unit;
+    reg [3:0] opcode;
+    wire alu_op, reg_write, mem_read, mem_write;
+
+    control_unit cu(
+        .opcode(opcode),
+        .alu_op(alu_op),
+        .reg_write(reg_write),
+        .mem_read(mem_read),
+        .mem_write(mem_write)
+    );
+
+    initial begin
+        opcode = 4'b0000; // ADD
+        #10;
+        opcode = 4'b0001; // SUB
+        #10;
+        $finish;
+    end
+endmodule
+
+module tb_alu;
+    reg [15:0] A, B;
+    reg alu_op;
+    wire [15:0] result;
+
+    alu a(
+        .A(A),
+        .B(B),
+        .alu_op(alu_op),
+        .result(result)
+    );
+    initial begin
+        A = 16'h0005; B = 16'h0003; alu_op = 1; // ADD
+        #10;
+        A = 16'h0005; B = 16'h0003; alu_op = 0; // SUB
+        #10;
+        $finish;
+    end
+endmodule
+
+module tb_register_handler;
+    reg clk;
+    reg reg_write;
+    reg [3:0] reg_addr;
+    reg [15:0] reg_data;
+    wire [15:0] reg_out;
+
+    register_handler rh(
+        .clk(clk),
+        .reg_write(reg_write),
+        .reg_addr(reg_addr),
+        .reg_data(reg_data),
+        .reg_out(reg_out)
+    );
+
+    initial begin
+        clk = 0;
+        reg_write = 1; reg_addr = 4'b0001; reg_data = 16'h00FF; // Write to register 1
+        #10;
+        reg_write = 0; reg_addr = 4'b0001; // Read from register 1
+        #10;
+        $finish;
+    end
+
+    always #5 clk = ~clk; // Clock generation
+endmodule
+
+module tb_program_counter;
+    reg clk, reset;
+    wire [15:0] pc;
+
+    program_counter pc(
+        .clk(clk),
+        .reset(reset),
+        .pc(pc)
+    );
+
+    initial begin
+        clk = 0;
+        reset = 1; #10; // Reset the PC
+        reset = 0; #10; // Release reset
+        #100;
+        $finish;
+    end
+
+    always #5 clk = ~clk; // Clock generation
+endmodule
+
+module tb_ram;
+    reg clk;
+    reg mem_read, mem_write;
+    reg [15:0] address;
+    reg [15:0] data;
+
+    ram memory(
+        .clk(clk),
+        .mem_read(mem_read),
+        .mem_write(mem_write),
+        .address(address),
+        .data(data)
+    );
+
+    initial begin
+        clk = 0; mem_write = 1; address = 16'h0000; data = 16'hA5A5; // Write to address 0
+        #10;
+        mem
